@@ -52,6 +52,10 @@ def update_2cool_rcParams(**kwargs):
     for k,v in zip(kwargs.keys(),kwargs.values()):
         dict_rcParams[k]=v    
     
+    #solve bug legend fontsize not updated
+    fig,ax=plt.subplots()
+    plt.close()
+
     matplotlib.rcParams.update(dict_rcParams)
     
 
