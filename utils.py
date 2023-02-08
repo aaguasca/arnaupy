@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from astropy.table import Table
 
 def significant_digits(value,error_value):
     """
@@ -165,3 +166,110 @@ def closest_distance(x,y,xo,yo,n):
             bool_selected_node[arg_closer_node[j,i],i]=True
             
     return bool_selected_node
+
+
+def read_parameters_table(path,n):
+    """
+    Read table with several parameters required to compute
+    the last n columns of the table.
+    
+    The parameters are ordered from shorter parameter values
+    to longer ones.
+    
+    Parameters
+    ----------
+    path: string
+        Path to table.
+    n: int
+        Number of columns that are the results of using the parameters 
+        in the columns 0,..,n-1 of the table.
+        
+    Returns
+    -------
+    axes_values: list
+        List with the variables values ordered from shorter parameter
+        values to longer ones.
+    final_data: list
+        List with the n column parameters. The dimension of the returned
+        list is as follows:
+        - first dimension: the n column values
+        - second to n-1 dimension: the rehsaped parameter values size
+          with unrepeated parameter values.
+          
+    example 1:
+    variables: x,y,z. x,y,z=np.arange(10)
+    parametrization of the results: r=\sum_i,j,k x_i+y_j+z_k for all i,j,k
+    axes_values=[x,y,z]
+    final_data dimension: (1,10,10,10)
+    example 2:
+    variables: x,y,z. x,y,z=np.arange(10)
+    parametrization of the results: r1=\sum_i x_i+y_i+z_i and r2=\sum_i x_i*y_i*z_i for all i
+    axes_values=[x,y,z]
+    final_data dimension: (2,10)
+    """
+    
+    tab=Table.read(path, format='ascii')
+
+    #dict with colname and unique values of the parameter variables
+    col_values={}
+    #size unique values for each colname of the parameter variables
+    col_n_values=[]
+    
+    print(tab.colnames)
+    #get the parameter values
+    for col in tab.colnames[:-n]:
+        unique_val=np.unique(tab[col])
+        col_values[col]=unique_val
+        col_n_values.append(len(unique_val))
+
+    #sort size to have ascendent order
+    arg_order_size=np.argsort(col_n_values)
+    print(col_n_values)
+    
+    #obtain the names in sorted order
+    axis_name_array=[]
+    for i in arg_order_size:
+        axis_name_array.append(list(col_values.keys())[i])
+
+    #reshape the results to the shape based on the colname order
+    data=[]
+    for col in tab.colnames[-n:]:
+        if len(tab[col].value)==np.prod(col_n_values):
+            data.append(tab[col].value.reshape(col_n_values)*tab[col].unit)
+        else:
+            data.append(tab[col].value*tab[col].unit)
+        
+    #list with the sorted dim
+    new_shape=[]
+    #list with the values of each parameter, sorted order
+    axes_values=[]
+    for name in axis_name_array:
+        new_shape.append(len(col_values[name]))
+        axes_values.append(col_values[name])
+        
+    #arg of the name to exclude. To avoid swaping again
+    skip_arg_name=1000
+    
+    print("old",col_values.keys())
+    print("new",axis_name_array)
+    print("new shape",new_shape)
+
+    #swap the axes that are not ordered in the colname order
+    new=new_shape
+    
+    #swap for all results
+    for kk,dat in enumerate(data):    
+        old=np.shape(dat) 
+#         print(f"old shape {kk}",np.shape(dat))
+        for i in range(len(old)):
+            if old[i]!=new[i]:
+                #avoid repeating the same swap
+                if i!=skip_arg_name:
+                    arg_name=np.argwhere(np.array(new)==old[i])[0][0]
+#                     print(i,arg_name)
+                    data[kk]=np.swapaxes(dat,i,arg_name)
+                    skip_arg_name=arg_name
+
+    final_data=data
+    print("final shape",np.shape(final_data))
+    return axes_values,final_data
