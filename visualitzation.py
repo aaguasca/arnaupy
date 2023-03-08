@@ -59,7 +59,7 @@ def update_2cool_rcParams(**kwargs):
     matplotlib.rcParams.update(dict_rcParams)
     
 
-def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=None):
+def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=None, **kwargs):
     """
     Plot the equation showing the value of given mathematical symbol in a plot.
     
@@ -78,6 +78,8 @@ def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=
     value_erorr: float or None
         If None, the error is not showed. Else, the value and the error
         are rounded to show only significant decimals.
+    kwargs
+        Kwargs passed to ax.text
     
     Returns
     -------
@@ -91,6 +93,8 @@ def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=
         "verticalalignment":'center',
         "zorder":1000,
     }
+    
+    text_kwargs.update(kwargs)
     
     if value_error!=None:
         value,value_error,n_decimals=significant_digits(value,value_error)
