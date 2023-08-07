@@ -3,6 +3,15 @@ import matplotlib.pyplot as plt
 from .utils import significant_digits
 from matplotlib.transforms import Bbox
 import matplotlib
+import string
+
+__all__=[
+    "update_2cool_rcParams",
+    "plot_parameter_value",
+    "add_panel_labels",
+    "plot_preliminary_text",
+    "manage_number_axes",
+]
 
 def update_2cool_rcParams(**kwargs):
     """
@@ -178,6 +187,125 @@ def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=
     t.set_position((pos_x,pos_y))
        
     return ax
+
+
+def add_panel_labels(fig,label_style="alphabet",loc="lower left", **kwargs):
+    """
+    Plot the label of the plots in a panel.
+    
+    Parameters
+    ----------
+    fig: matplotlib.pyplot.figure
+        Figure
+    label_style: str
+        Style of the label of the pannels: options; alphabet: use alphabetical order.
+        numbers: use numbers. Else, specify yourself the labels.
+    loc: string
+        Location of the equation in the plot.
+    kwargs
+        Kwargs passed to ax.text
+    
+    """
+    
+    axs_list = fig.axes
+    
+    if label_style=="alphabet":
+        alphabet = list(string.ascii_lowercase)
+        label_list = alphabet[:len(axs_list)]
+    elif label_style=="numbers":
+        label_list = np.arange(len(axs_list))
+    else:
+        try:
+            if len(label_style) == len(axs_list):
+                label_list=label_style
+        except:
+            raise ValueError("The dimension of label_style is not the same to the number of plots.")
+                               
+    text_kwargs={
+        "horizontalalignment":'center',
+        "verticalalignment":'center',
+        "zorder":1000,
+    }    
+                               
+    text_kwargs.update(kwargs)
+                               
+                               
+    for text_print,ax in zip(label_list,axs_list):
+    
+        xmin,xmax=ax.get_xlim()
+        ymin,ymax=ax.get_ylim()
+
+        dx=xmax-xmin
+        dy=ymax-ymin
+
+        t=ax.text(0.1,0.1,text_print, **text_kwargs)
+        r = fig.canvas.get_renderer()
+
+        bbox_text=t.get_window_extent(r)
+        bbox_ax=ax.get_window_extent(r)
+
+        frac_hor_size_t=bbox_text.width/bbox_ax.width
+        frac_ver_size_t=bbox_text.height/bbox_ax.height
+
+        x_interval=1/10
+        y_interval=1/10
+
+
+        if frac_hor_size_t/2>x_interval:
+            x_interval=frac_hor_size_t/2+x_interval
+        if frac_ver_size_t/2>y_interval:
+            y_interval=frac_ver_size_t/2+y_interval
+
+        if loc=="lower left":
+            if ax.get_xscale()=="linear":
+                pos_x=xmin+dx*(x_interval)
+            if ax.get_xscale()=="log":
+                pos_x=np.exp(np.log(xmin)+(x_interval)*(np.log(xmax)-np.log(xmin)))
+
+            if ax.get_yscale()=="linear":
+                pos_y=ymin+dy*(y_interval)
+            if ax.get_yscale()=="log":
+                pos_y=np.exp(np.log(ymin)+(y_interval)*(np.log(ymax)-np.log(ymin)))
+
+        elif loc=="lower right":
+            if ax.get_xscale()=="linear":       
+                pos_x=xmax-dx*(x_interval)
+            if ax.get_xscale()=="log":
+                pos_x=np.exp(np.log(xmax)-(x_interval)*(np.log(xmax)-np.log(xmin)))
+
+            if ax.get_yscale()=="linear":       
+                pos_y=ymin+dy*(y_interval)
+            if ax.get_yscale()=="log":
+                pos_y=np.exp(np.log(ymin)+(y_interval)*(np.log(ymax)-np.log(ymin)))
+
+        elif loc=="upper left":
+            if ax.get_xscale()=="linear":
+                pos_x=xmin+dx*(x_interval)
+            if ax.get_xscale()=="log":
+                pos_x=np.exp(np.log(xmin)+(x_interval)*(np.log(xmax)-np.log(xmin)))
+
+            if ax.get_yscale()=="linear":        
+                pos_y=ymax-dy*(y_interval)
+            if ax.get_yscale()=="log":     
+                pos_y=np.exp(np.log(ymax)-(y_interval)*(np.log(ymax)-np.log(ymin)))
+
+        elif loc=="upper right":
+            if ax.get_xscale()=="linear":
+                pos_x=xmax-dx*(x_interval)
+            if ax.get_xscale()=="log":
+                pos_x=np.exp(np.log(xmax)-(x_interval)*(np.log(xmax)-np.log(xmin)))
+
+            if ax.get_yscale()=="linear":        
+                pos_y=ymax-dy*(y_interval)
+            if ax.get_yscale()=="log": 
+                pos_y=np.exp(np.log(ymax)-(y_interval)*(np.log(ymax)-np.log(ymin)))        
+
+        else:
+            raise ValueError("Error, available values or loc are: lower left,"+\
+                             " lower right, upper left, upper right")
+
+        t.set_position((pos_x,pos_y))
+       
 
 
 def plot_preliminary_text(fig,ax):
