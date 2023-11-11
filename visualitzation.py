@@ -334,7 +334,7 @@ def plot_preliminary_text(fig,ax):
         "size":50,
         "horizontalalignment":'center',
         "verticalalignment":'center',
-        "zorder":1000,
+        "zorder":0,
     }
 
     xmin,xmax=ax.get_xlim()
@@ -437,3 +437,56 @@ def manage_number_axes(data_shape,figsize=None,nrows=None,ncols=None):
     
     return axs
     
+
+def correct_display_flux_units(flux_units):
+    """
+    Function to return units of an integral or differential flux in
+    The usual way the units of the flux are defined: energy per cm-2 s-1.
+
+    Parameters
+    ----------
+    flux_units: astropy.unit
+        Units of the flux
+
+    Returns
+    -------
+    units_string: str
+        Units in latex_inline format of the flux
+
+    """
+
+    units_string=flux_units.to_string("latex_inline")
+
+    # split the string to get a list with the units (ex in one index: s^{-1})
+    split_units=units_string.split("\\mathrm{")[1].split("}$")[0].split("\,")
+
+    #obtain the power of the energy
+    for iunit,ipow in zip(split_units,flux_units.powers):
+        if u.Unit(iunit.split("^")[0]).is_equivalent("erg"):
+            energy_power=ipow
+
+    if flux_units.is_equivalent(u.Unit(f"erg{energy_power} cm-2 s-1")):
+
+        if energy_power!=0:
+            units_to_check_order=[f"erg{energy_power}","cm-2", "s-1"]
+        else:
+            units_to_check_order=["cm-2", "s-1"]
+
+        # fill a list with the order we want
+        correct_unit_order=[]
+        for i_u in units_to_check_order:
+            for iunit,ipow in zip(split_units,flux_units.powers):
+                new_iunit=u.Unit(iunit.split("^")[0])**ipow
+                if u.Unit(f"{new_iunit}").is_equivalent(f"{i_u}"):
+                    correct_unit_order.append(iunit)
+
+        # write again the string with the correct order
+        if energy_power!=0:
+            units_string="$\\mathrm{"+correct_unit_order[-3]+"\\,"+correct_unit_order[-2]+"\\,"+correct_unit_order[-1]+"}$"
+        else:
+            units_string="$\\mathrm{"+correct_unit_order[-2]+"\\,"+correct_unit_order[-1]+"}$"
+
+        return units_string
+
+    else:
+        raise Exception("The units provided are not equivalent to E^power cm-2 s-1")
