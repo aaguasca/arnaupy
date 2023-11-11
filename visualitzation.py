@@ -4,6 +4,7 @@ from .utils import significant_digits
 from matplotlib.transforms import Bbox
 import matplotlib
 import string
+import astropy.units as u
 
 __all__=[
     "update_2cool_rcParams",
