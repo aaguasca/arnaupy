@@ -92,7 +92,6 @@ class significant_digits:
         val = str(val)
         return val
     
-
     def rounding(self, val, first_two_significant_figures):
         """
         Rounding the value val using the first_two_significant_figures 
@@ -119,6 +118,7 @@ class significant_digits:
         val: str
             Value of val rounded        
         """        
+
         # keep the second significant figure it is a 9, 
         # since the round of 9 is not zero but ten!
         if int(first_two_significant_figures)==9 and \
@@ -161,8 +161,7 @@ class significant_digits:
 
         val=str(val)
         return val
-    
-        
+            
     def run(self,precision=1):
         """
         Run the script to round the value (and its uncertainty)
@@ -182,7 +181,7 @@ class significant_digits:
         
         """
         
-        #consider the significant figures of the error value
+        # consider the significant figures of the error value
         if self.error_value!=None:
         
             if self.error_value!=0:
@@ -244,6 +243,7 @@ class significant_digits:
                 print("No rounding because the value is > 10")
                 
         return self.value, self.error_value
+
 
 def normalization(x):
     """
