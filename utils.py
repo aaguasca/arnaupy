@@ -163,7 +163,7 @@ class significant_digits:
         return val
     
         
-    def run(self,precision):
+    def run(self,precision=1):
         """
         Run the script to round the value (and its uncertainty)
         using a certain precision.
