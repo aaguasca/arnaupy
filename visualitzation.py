@@ -390,9 +390,7 @@ def manage_number_axes(data_shape,figsize=None,nrows=None,ncols=None):
 
     """
     data_shape
-        shape: 0-> plot ax
-        shape: 1-> x or y
-        shape: 2-> date in x or y    
+        shape: 0-> array with the dimension equal to the number of axes to plot
     """
     
     if ncols==None and nrows==None:
@@ -420,24 +418,16 @@ def manage_number_axes(data_shape,figsize=None,nrows=None,ncols=None):
     else:
         fig,axs=plt.subplots(figsize=figsize,nrows=nrows,ncols=ncols)
 
-    
-    if data_shape.shape[0]==1:
-        axs.plot(data_shape[0,0,:],data_shape[0,1,:],"X")
-    else:
-        naxes=0
-        for ax_row in axs:
-            if isinstance(ax_row,np.ndarray):
-                for ax_col in ax_row:
-                    if naxes>=data_shape.shape[0]:
-                        ax_col.remove()
-                    else:
-                        ax_col.plot(data_shape[naxes,0,:],data_shape[naxes,1,:],"X")
-                    naxes=naxes+1
-            else:
-                ax_row.plot(data_shape[i,0,:],data_shape[i,1,:],"X")
-    
-    return axs
-    
+    naxes=0
+    for ax_row in axs:
+        if isinstance(ax_row,np.ndarray):
+            for ax_col in ax_row:
+                if naxes>=data_shape.shape[0]:
+                    ax_col.remove()
+                naxes=naxes+1
+        
+    axs=axs.flatten()
+    return fig, axs    
 
 def correct_display_flux_units(flux_units):
     """
