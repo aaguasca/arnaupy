@@ -419,7 +419,7 @@ def manage_number_axes(data_shape,single_plot_figsize=None,nrows=None,ncols=None
     if single_plot_figsize==None:
         fig,axs=plt.subplots(nrows=nrows,ncols=ncols)
     else:
-        fig,axs=plt.subplots(figsize=(single_plot_figsize[0],single_plot_figsize[1]),nrows=nrows,ncols=ncols)
+        fig,axs=plt.subplots(figsize=(single_plot_figsize[0]*ncols,single_plot_figsize[1]*nrows),nrows=nrows,ncols=ncols)
 
     naxes=0
     for ax_row in axs:
