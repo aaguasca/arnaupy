@@ -386,11 +386,13 @@ def plot_preliminary_text(fig,ax):
     return ax
 
 
-def manage_number_axes(data_shape,figsize=None,nrows=None,ncols=None):
+def manage_number_axes(data_shape,single_plot_figsize=None,nrows=None,ncols=None):
 
     """
     data_shape
-        shape: 0-> array with the dimension equal to the number of axes to plot
+        array with the dimension equal to the number of axes to plot
+    single_plot_figsize: tuple
+        tuple with two entries, horizontal and vertial size of each plot
     """
     
     if ncols==None and nrows==None:
@@ -413,10 +415,10 @@ def manage_number_axes(data_shape,figsize=None,nrows=None,ncols=None):
             raise ValueError("number of rows and columns is lower than the data strings")
 
     print(nrows,ncols)
-    if figsize==None:
+    if single_plot_figsize==None:
         fig,axs=plt.subplots(nrows=nrows,ncols=ncols)
     else:
-        fig,axs=plt.subplots(figsize=figsize,nrows=nrows,ncols=ncols)
+        fig,axs=plt.subplots(figsize=(single_plot_figsize[0],single_plot_figsize[1]),nrows=nrows,ncols=ncols)
 
     naxes=0
     for ax_row in axs:
