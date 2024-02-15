@@ -395,6 +395,7 @@ def manage_number_axes(data_shape,single_plot_figsize=None,nrows=None,ncols=None
         tuple with two entries, horizontal and vertial size of each plot
     """
     
+    data_shape = np.array(data_shape)
     if ncols==None and nrows==None:
         ncols=data_shape.shape[0]%2+data_shape.shape[0]//2
         nrows=data_shape.shape[0]%2+data_shape.shape[0]//2
