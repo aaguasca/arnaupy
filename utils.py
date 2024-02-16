@@ -27,7 +27,6 @@ class significant_digits:
         """
         self.value=value
         self.error_value=error_value
-        self.add_zero=0
                                         
     def rounding_of_one(self, val, first_two_significant_figures):
         """
@@ -51,46 +50,222 @@ class significant_digits:
         val: str
             Value of val rounded
         """
-        # keep on more digit
+        # keep on more digit: meaning the n_zero_decimals has the 
+        #second significant digit in the unit
         if self.n_zero_decimals!=0:
-            self.n_zero_decimals=int(self.n_zero_decimals+np.sign(self.n_zero_decimals)*1)
+            sign=np.sign(self.n_zero_decimals)
+            if sign==1:
+                #if 0.1XX or lower, we have to add one extra movement
+                self.n_zero_decimals=int(self.n_zero_decimals-np.sign(self.n_zero_decimals))
+            else:
+                #if 10 or higher, we have to remove one extra movement                
+                self.n_zero_decimals=int(self.n_zero_decimals+np.sign(self.n_zero_decimals))            
         else:
-            self.n_zero_decimals=self.n_zero_decimals+1
-            self.add_zero=1
-        self.precision+=1
+            #if 1, we have to move one extra movement
+            self.n_zero_decimals=self.n_zero_decimals-1
+            sign=-1
+
         #keep the second significant figure
         round_val=round(first_two_significant_figures,1)
 
         #if the after rounding changes from 1 to 2, add 0 afterwards
         if int(first_two_significant_figures)!=int(round_val):
-            # values higher than 1, e.g. 1, 10, 100, 1000, ...
-            if self.n_zero_decimals>=1:
-                val=10**self.n_zero_decimals*round(
-                    val/10**self.n_zero_decimals,self.precision
-                )
-
-                #keep the digit after the decimal point for values ex 1.X
-                if self.n_zero_decimals==1:
-                    val=float(np.round(val,10))
-                #the decimal point is not needed
+            val=10**self.n_zero_decimals*round(
+                val/10**self.n_zero_decimals,0
+            )     
+            if self.n_zero_decimals<0:
+                if self.n_zero_decimals<-1:
+                    val=str(val)+"0"
                 else:
-                    val=int(np.round(val,10))
-            #for the decimal values (< 1), add extra zero afterwards
+                    val=str(val)
             else:
-                val=10**self.n_zero_decimals*round(val/10**self.n_zero_decimals)                                
-                val=str(val)+"0"
+                val=int(val)            
 
         #round keeping the second significant figure
         else:
-            val=10**self.n_zero_decimals*round(
-                val/10**self.n_zero_decimals,self.precision
+            #rounding according to the rules below
+            # val=10**self.n_zero_decimals*round(
+            #     val/10**self.n_zero_decimals,0
+            # )
+            
+            #rounding according to the rules below
+            rounded_val=float(
+                self.rounding(val,val/10**self.n_zero_decimals)
             )
+            rounded_val=rounded_val/10**self.n_zero_decimals
+            val=10**self.n_zero_decimals*rounded_val           
             val=np.round(val,10)
-            if self.n_zero_decimals>1:
+            
+            if sign==1:
                 val=int(val)
-        
+            elif sign==-1 and self.n_zero_decimals<-1:
+                if str(round(val/10**self.n_zero_decimals,0)).split(".")[0][-1]==0:
+                    val=str(val)+"0"
+            else:
+                pass
+            
         val = str(val)
         return val
+    
+    def rounding(self, val, first_two_significant_figures):
+        """
+        Rounding the value val using the first_two_significant_figures 
+        variable, which is the value with the first and second 
+        significant figure as a unit and a decimal, respectively.
+        
+        Rounding off is considered when the second digit is a 5 to avoid 
+        the issue of rounding up for 5 or more. Then, if the first 
+        significant figure is odd, the value is round up, else, round off.
+        
+        Also, the rounding from 9 to 10 keeps the 0 from the 10 since
+        it is important information that cannot be excluded.
+        
+        Parameters
+        ----------
+        val: int, float
+            Value to round.
+        first_two_significant_figures: float
+            Value to round with the first and second significant figure
+            divided by the decimal point
+            
+        Returns
+        -------
+        val: str
+            Value of val rounded        
+        """        
+
+        # keep the second significant figure it is a 9, 
+        # since the round of 9 is not zero but ten!        
+        if int(first_two_significant_figures)==9 and \
+            int(first_two_significant_figures)!=int(round(val*10**(-self.n_zero_decimals))):
+            val=round(val,-1*self.n_zero_decimals)
+            if self.n_zero_decimals<0:
+                if self.n_zero_decimals<-1:
+                    val=str(val)+"0"
+                else:
+                    val=str(val)
+            else:
+                val=int(val)
+
+        #rounding off with a 5 as a second digit
+        elif int(round(np.modf(first_two_significant_figures)[0],5)*10)==5:
+
+            # if even the first significant figure, do not round
+            if (int(np.modf(first_two_significant_figures)[1])%2)==0:
+                #round last significant digit
+                val=int(val*10**(-self.n_zero_decimals)) * 10**self.n_zero_decimals
+                val=np.round(val,10) 
+                if self.precision == 2:
+                    val=str(val)+"0"
+
+            # if odd the first significant figure, round                
+            else:                
+                val=10**self.n_zero_decimals*round(
+                    np.ceil(first_two_significant_figures) * \
+                    10**self.n_zero_decimals/10**self.n_zero_decimals
+                )
+                val=np.round(val,10)
+                if self.precision == 2:
+                    val=str(val)+"0"  
+                    
+        #usual rounding
+        else:
+            val=10**self.n_zero_decimals*round(val/10**(self.n_zero_decimals))
+
+            # for example, cases where the error value is 1.3 and you 
+            # want the value of 200 to be "200.0" to match the error 
+            # value digits
+            if self.n_zero_decimals==1 and self.precision==2:
+                val=float(np.round(val,10))
+            else:
+                val=np.round(val,10)
+
+        val=str(val)
+        return val
+            
+    def run(self,precision=1):
+        """
+        Run the script to round the value (and its uncertainty)
+        using a certain precision.
+        
+        Parameters
+        ----------
+        precision: int
+            Number of significant figures to display
+            
+        Returns
+        -------
+        value: str
+            Value of value rounded     
+        error_value: str
+            Uncertainty value rounded     
+        
+        """
+        
+        # consider the significant figures of the error value
+        if self.error_value!=None:
+        
+            if self.error_value!=0:
+                self.digits = int( np.ceil( math.log10( abs( self.error_value ) ) ) )
+            else:
+                raise ErrorValue("Uncertainty is zero!")
+                
+            self.precision=precision
+            #the number of digits, decimals to reach the decimal where the unit
+            #is the first significant digit and the second as a decimal
+            self.n_zero_decimals=self.digits - self.precision
+
+            #take the two first significant figures with the second as a decimal
+            first_two_significant_err_figures=self.error_value*10**(-self.n_zero_decimals)
+            #first significant digit is 1
+            if int(first_two_significant_err_figures)==1:
+                self.error_value = self.rounding_of_one(
+                    self.error_value, first_two_significant_err_figures
+                )
+            else:
+                self.error_value = self.rounding(
+                    self.error_value, first_two_significant_err_figures
+                )
+                
+            #round of the value
+            #take the two first significant figures with the second as a decimal
+            first_two_significant_value_figures = round(
+                self.value*10**(-self.n_zero_decimals),
+                10
+            )
+            self.value = self.rounding(self.value, first_two_significant_value_figures)
+                            
+        else:
+            if self.value!=0:
+                self.digits = int( np.ceil( math.log10( abs( self.value ) ) ) )
+            else:
+                raise ErrorValue("Uncertainty is zero!")
+            
+            self.precision = precision
+            self.n_zero_decimals = self.digits - self.precision
+
+            # values > 10 makes not sense to round
+            if self.digits <= 1:
+                #take the two first significant figures with the second as a decimal
+                first_two_significant_value_figures = round(
+                    self.value*10**(-self.n_zero_decimals),
+                    10
+                )
+                print(first_two_significant_value_figures)
+                #first significant digit is 1
+                if int(first_two_significant_value_figures)==1:
+                    self.value = self.rounding_of_one(
+                        self.value, first_two_significant_value_figures
+                    )
+                else:
+                    self.value = self.rounding(
+                        self.value, first_two_significant_value_figures
+                    )
+            else:
+                print("No rounding because the value is > 10")
+                
+        return self.value, self.error_value
+
     
     def rounding(self, val, first_two_significant_figures):
         """
