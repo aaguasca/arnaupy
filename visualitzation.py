@@ -394,15 +394,18 @@ def manage_number_axes(data_shape,single_plot_figsize=None,nrows=None,ncols=None
     single_plot_figsize: tuple
         tuple with two entries, horizontal and vertial size of each plot
     """
-    
+
     data_shape = np.array(data_shape)
-    if ncols==None and nrows==None:
-        ncols=data_shape.shape[0]%2+data_shape.shape[0]//2
-        nrows=data_shape.shape[0]%2+data_shape.shape[0]//2
+    if data_shape.shape[0]==1:
+        raise Exception("shape is 1")
+    
+    if ncols==None and nrows==None:       
+        ncols=int(np.ceil(data_shape.shape[0]**0.5))
+        nrows=int(np.ceil(data_shape.shape[0]**0.5))
         
         if data_shape.shape[0]==2:
-            ncols=ncols+1
-            nrows=nrows+1
+            ncols=2
+            nrows=1
             
     elif ncols!=None and nrows==None:
         nrows=data_shape.shape[0]%2+data_shape.shape[0]//2 + 1
@@ -415,7 +418,11 @@ def manage_number_axes(data_shape,single_plot_figsize=None,nrows=None,ncols=None
         if nrows*ncols<data_shape.shape[0]:
             raise ValueError("number of rows and columns is lower than the data strings")
 
+    while nrows*ncols<data_shape.shape[0]:
+        ncols+=1
+
     print(nrows,ncols)
+
     if single_plot_figsize==None:
         fig,axs=plt.subplots(nrows=nrows,ncols=ncols)
     else:
@@ -431,6 +438,7 @@ def manage_number_axes(data_shape,single_plot_figsize=None,nrows=None,ncols=None
         
     axs=axs.flatten()
     return fig, axs    
+    
 
 def correct_display_flux_units(flux_units):
     """
