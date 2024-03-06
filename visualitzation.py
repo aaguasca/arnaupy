@@ -7,11 +7,12 @@ import string
 import astropy.units as u
 
 __all__=[
-    "update_2cool_rcParams",
-    "plot_parameter_value",
-    "add_panel_labels",
-    "plot_preliminary_text",
+    "add_panel_labels",    
+    "add_text_info",
     "manage_number_axes",
+    "plot_parameter_value",
+    "plot_preliminary_text",
+    "update_2cool_rcParams",
     "text_in_figure_borders",
 ]
 
@@ -215,6 +216,33 @@ def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=
        
     return ax
 
+
+def add_text_info(fig, ax, text_print, loc="lower left", **kwargs):
+    """
+    General function to add text in the borders of a figure
+    """
+    
+    text_kwargs={
+        "size":20,
+        "horizontalalignment":'center',
+        "verticalalignment":'center',
+        "zorder":1000,
+    }
+    
+    text_kwargs.update(kwargs)
+        
+    t=ax.text(0.1,0.1,text_print,**text_kwargs)
+
+    x_interval=1/20
+    y_interval=1/20
+    
+    pos_x,pos_y=text_in_figure_borders(fig,ax,t,loc,x_interval,y_interval)
+    
+    t.set_position((pos_x,pos_y))
+       
+    return ax
+    
+    
 
 def add_panel_labels(fig,label_style="alphabet",loc="lower left", **kwargs):
     """
