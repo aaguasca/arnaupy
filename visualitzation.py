@@ -107,10 +107,12 @@ def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=
     text_kwargs.update(kwargs)
     
     if value_error!=None:
-        value,value_error,n_decimals=significant_digits(value,value_error)
-        text_print=r"$\{} = {:1.{}f} \pm {:1.{}f}$".format(latex_symbol,
-                                                           value,n_decimals,
-                                                           value_error,n_decimals)
+        sig_figures=significant_digits(value,value_error)
+        value_str,value_error_str=sig_figures.run(1)
+        
+        text_print=r"$\{} = {} \pm {}$".format(latex_symbol,
+                                               value_str,
+                                               value_error_str)
     else:
         text_print=r"$\{} = {:1.3}$".format(latex_symbol,value)
 
