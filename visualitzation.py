@@ -12,6 +12,7 @@ __all__=[
     "add_panel_labels",
     "plot_preliminary_text",
     "manage_number_axes",
+    "text_in_figure_borders",
 ]
 
 def update_2cool_rcParams(**kwargs):
@@ -68,71 +69,37 @@ def update_2cool_rcParams(**kwargs):
 
     matplotlib.rcParams.update(dict_rcParams)
     
-
-def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=None, **kwargs):
+    
+def text_in_figure_borders(fig,ax,text,loc,x_interval=10,y_interval=10):
     """
-    Plot the equation showing the value of given mathematical symbol in a plot.
+    Function that finds the x and y position in the figure
+    to display a text in that position. It works for both linear
+    or log scale
     
-    Parameters
-    ----------
-    fig: matplotlib.pyplot.figure
-        Figure
-    ax: matplotlib.pyplot.axis
-        Axis used to store the figure
-    latex_symbol: string
-        Latex mathetmatical name of a symbol (\ is not required)
-    value: float
-        Value of the latex_symbol.
-    loc: string
-        Location of the equation in the plot.
-    value_erorr: float or None
-        If None, the error is not showed. Else, the value and the error
-        are rounded to show only significant decimals.
-    kwargs
-        Kwargs passed to ax.text
-    
-    Returns
-    -------
-    ax:
-        Axis
+    text: matplotlib.text.Text
+        Text to display.
+    loc:
+        Location to place the text. 
+        Available options: lower left/right, upper left/right 
+    x_interval: int, float
+        interval in the x-axis
+    y_interval: int, float
+        interval in the y-axis        
     """
     
-    text_kwargs={
-        "size":20,
-        "horizontalalignment":'center',
-        "verticalalignment":'center',
-        "zorder":1000,
-    }
-    
-    text_kwargs.update(kwargs)
-    
-    if value_error!=None:
-        sig_figures=significant_digits(value,value_error)
-        value_str,value_error_str=sig_figures.run(1)
-        
-        text_print=r"$\{} = {} \pm {}$".format(latex_symbol,
-                                               value_str,
-                                               value_error_str)
-    else:
-        text_print=r"$\{} = {:1.3}$".format(latex_symbol,value)
-
     xmin,xmax=ax.get_xlim()
     ymin,ymax=ax.get_ylim()
 
     dx=xmax-xmin
     dy=ymax-ymin
-    
-    t=ax.text(0.1,0.1,text_print,**text_kwargs)
+
     r = fig.canvas.get_renderer()
     
-    bbox_text=t.get_window_extent(r)
+    bbox_text=text.get_window_extent(r)
     bbox_ax=ax.get_window_extent(r)
     
     frac_hor_size_t=bbox_text.width/bbox_ax.width
     frac_ver_size_t=bbox_text.height/bbox_ax.height
-
-    x_interval=1/20
-    y_interval=1/20
     
     if frac_hor_size_t/2>x_interval:
         x_interval=frac_hor_size_t/2+x_interval
@@ -186,7 +153,64 @@ def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=
     else:
         raise ValueError("Error, available values or loc are: lower left,"+\
                          " lower right, upper left, upper right")
+    
+    return pos_x, pos_y
+    
+    
+def plot_parameter_value(fig,ax,latex_symbol,value,loc="lower left",value_error=None, **kwargs):
+    """
+    Plot the equation showing the value of given mathematical symbol in a plot.
+    
+    Parameters
+    ----------
+    fig: matplotlib.pyplot.figure
+        Figure
+    ax: matplotlib.pyplot.axis
+        Axis used to store the figure
+    latex_symbol: string
+        Latex mathetmatical name of a symbol (\ is not required)
+    value: float
+        Value of the latex_symbol.
+    loc: string
+        Location of the equation in the plot.
+    value_erorr: float or None
+        If None, the error is not showed. Else, the value and the error
+        are rounded to show only significant decimals.
+    kwargs
+        Kwargs passed to ax.text
+    
+    Returns
+    -------
+    ax:
+        Axis
+    """
+    
+    text_kwargs={
+        "size":20,
+        "horizontalalignment":'center',
+        "verticalalignment":'center',
+        "zorder":1000,
+    }
+    
+    text_kwargs.update(kwargs)
+    
+    if value_error!=None:
+        sig_figures=significant_digits(value,value_error)
+        value_str,value_error_str=sig_figures.run(1)
+        
+        text_print=r"$\{} = {} \pm {}$".format(latex_symbol,
+                                               value_str,
+                                               value_error_str)
+    else:
+        text_print=r"$\{} = {:1.3}$".format(latex_symbol,value)
+    
+    t=ax.text(0.1,0.1,text_print,**text_kwargs)
 
+    x_interval=1/20
+    y_interval=1/20
+    
+    pos_x,pos_y=text_in_figure_borders(fig,ax,t,loc,x_interval,y_interval)
+    
     t.set_position((pos_x,pos_y))
        
     return ax
@@ -233,82 +257,15 @@ def add_panel_labels(fig,label_style="alphabet",loc="lower left", **kwargs):
     text_kwargs.update(kwargs)
                                
                                
-    for text_print,ax in zip(label_list,axs_list):
+    for text_print, iax in zip(label_list,axs_list):
     
-        xmin,xmax=ax.get_xlim()
-        ymin,ymax=ax.get_ylim()
-
-        dx=xmax-xmin
-        dy=ymax-ymin
-
-        t=ax.text(0.1,0.1,text_print, **text_kwargs)
-        r = fig.canvas.get_renderer()
-
-        bbox_text=t.get_window_extent(r)
-        bbox_ax=ax.get_window_extent(r)
-
-        frac_hor_size_t=bbox_text.width/bbox_ax.width
-        frac_ver_size_t=bbox_text.height/bbox_ax.height
-
+        t=iax.text(0.1,0.1,text_print, **text_kwargs)
         x_interval=1/10
         y_interval=1/10
-
-
-        if frac_hor_size_t/2>x_interval:
-            x_interval=frac_hor_size_t/2+x_interval
-        if frac_ver_size_t/2>y_interval:
-            y_interval=frac_ver_size_t/2+y_interval
-
-        if loc=="lower left":
-            if ax.get_xscale()=="linear":
-                pos_x=xmin+dx*(x_interval)
-            if ax.get_xscale()=="log":
-                pos_x=np.exp(np.log(xmin)+(x_interval)*(np.log(xmax)-np.log(xmin)))
-
-            if ax.get_yscale()=="linear":
-                pos_y=ymin+dy*(y_interval)
-            if ax.get_yscale()=="log":
-                pos_y=np.exp(np.log(ymin)+(y_interval)*(np.log(ymax)-np.log(ymin)))
-
-        elif loc=="lower right":
-            if ax.get_xscale()=="linear":       
-                pos_x=xmax-dx*(x_interval)
-            if ax.get_xscale()=="log":
-                pos_x=np.exp(np.log(xmax)-(x_interval)*(np.log(xmax)-np.log(xmin)))
-
-            if ax.get_yscale()=="linear":       
-                pos_y=ymin+dy*(y_interval)
-            if ax.get_yscale()=="log":
-                pos_y=np.exp(np.log(ymin)+(y_interval)*(np.log(ymax)-np.log(ymin)))
-
-        elif loc=="upper left":
-            if ax.get_xscale()=="linear":
-                pos_x=xmin+dx*(x_interval)
-            if ax.get_xscale()=="log":
-                pos_x=np.exp(np.log(xmin)+(x_interval)*(np.log(xmax)-np.log(xmin)))
-
-            if ax.get_yscale()=="linear":        
-                pos_y=ymax-dy*(y_interval)
-            if ax.get_yscale()=="log":     
-                pos_y=np.exp(np.log(ymax)-(y_interval)*(np.log(ymax)-np.log(ymin)))
-
-        elif loc=="upper right":
-            if ax.get_xscale()=="linear":
-                pos_x=xmax-dx*(x_interval)
-            if ax.get_xscale()=="log":
-                pos_x=np.exp(np.log(xmax)-(x_interval)*(np.log(xmax)-np.log(xmin)))
-
-            if ax.get_yscale()=="linear":        
-                pos_y=ymax-dy*(y_interval)
-            if ax.get_yscale()=="log": 
-                pos_y=np.exp(np.log(ymax)-(y_interval)*(np.log(ymax)-np.log(ymin)))        
-
-        else:
-            raise ValueError("Error, available values or loc are: lower left,"+\
-                             " lower right, upper left, upper right")
+        
+        pos_x,pos_y=text_in_figure_borders(fig,iax,t,loc,x_interval,y_interval)
 
         t.set_position((pos_x,pos_y))
-       
 
 
 def plot_preliminary_text(fig,ax):
