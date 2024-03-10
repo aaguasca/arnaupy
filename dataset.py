@@ -1,8 +1,10 @@
 import numpy as np
+from pathlib import Path
+import yaml
 
 class run_dataset:
     
-    def __init__(self,run_id,date,initialize_separate_lists=False):   
+    def __init__(self,run_id=[], date=[], initialize_separate_lists=False):   
         """
         Initialize the class run_dataset
         
@@ -11,7 +13,7 @@ class run_dataset:
         run_id : list
         date : list
         initialize_separate_lists : bool
-        
+                
         If initialize_separate_lists is True: 
             - run_id is a list of list with the run ids of the same date in a single list.
             - date is a single list with the dates. Dimension 1 correspond to the date for the
@@ -34,7 +36,7 @@ class run_dataset:
         >>> #create the dataset
         >>> run_dataset(day_runs,days,True)
         
-        Use initialize_separate_lists as True. Using the previous example        
+        Use initialize_separate_lists as False. Using the previous example        
         >>> #Produce two list where the index gives the date and run ID
         >>> array_runs=[]
         >>> for i,dayrun in enumerate(day_runs):
@@ -44,7 +46,7 @@ class run_dataset:
         >>> #fill the run_dataset class
         >>> dataset=run_dataset(array_runs[:,1],array_runs[:,0])
         """
-        
+                    
         runs=[]
         if initialize_separate_lists:
             array_runs=[]
@@ -55,7 +57,7 @@ class run_dataset:
             array_runs=np.array(array_runs)
             run_id=array_runs[:,1]
             date=array_runs[:,0]            
-        
+
         self.id=run_id
         self.date=date
         runs.append(self)
@@ -147,3 +149,51 @@ class run_dataset:
         else:
             runs.append(self.id)
         return np.unique(runs)    
+    
+    
+    def read_dataset(self, file_name):
+        """
+        Read a dataset from a yaml file.
+        
+        Parameters        
+        ----------
+        file_name: str
+        Path and file name of the yaml file with the dataset
+        
+        """
+        import yaml
+
+        if not Path(file_name).exists():
+            raise FileNotFoundError(f"File {file_name} does not exist")
+
+        with open(file_name, 'r') as file:
+            data = yaml.safe_load(file)
+
+        dates = list(data.keys())
+        run_list = []
+        for key in dates:
+            run_list.append(data[key])
+
+        # Initialize the run_dataset object with the data read from the file
+        self.__init__(run_list, dates, True)
+        
+        
+    def write_dataset(self, file_name):
+        """
+        Write to yaml file the dataset. The keys are the dates
+        and the values in the keys are the run_ids for that
+        date.
+        
+        Parameters        
+        ----------
+        file_name: str
+        Path and file name of the yaml file with the dataset
+        
+        """
+        
+        dataset_dict={}
+        for date in self.number_of_days():
+            dataset_dict[int(date)]=self.sort_runs_by_date(date).tolist()
+
+        with open(file_name, 'w') as file:
+            yaml.dump(dataset_dict, file, indent=4, default_flow_style=True)
