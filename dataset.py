@@ -196,4 +196,4 @@ class run_dataset:
             dataset_dict[int(date)]=self.sort_runs_by_date(date).tolist()
 
         with open(file_name, 'w') as file:
-            yaml.dump(dataset_dict, file, indent=4, default_flow_style=True)
+            yaml.dump(dataset_dict, file, indent=4, default_flow_style=False)
