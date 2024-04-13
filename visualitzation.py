@@ -475,7 +475,7 @@ def correct_display_flux_units(flux_units):
         else:
             units_string="$\\mathrm{"+correct_unit_order[-2]+"\\,"+correct_unit_order[-1]+"}$"
 
-        return units_string
+        return energy_power,units_string
 
     else:
         raise Exception("The units provided are not equivalent to E^power cm-2 s-1")
