@@ -453,6 +453,8 @@ def correct_display_flux_units(flux_units):
     for iunit,ipow in zip(split_units,flux_units.powers):
         if u.Unit(iunit.split("^")[0]).is_equivalent("erg"):
             energy_power=ipow
+        else:
+            energy_power=0
 
     if flux_units.is_equivalent(u.Unit(f"erg{energy_power} cm-2 s-1")):
 
