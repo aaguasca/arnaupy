@@ -449,12 +449,21 @@ def correct_display_flux_units(flux_units):
     # split the string to get a list with the units (ex in one index: s^{-1})
     split_units=units_string.split("\\mathrm{")[1].split("}$")[0].split("\,")
 
+    if len(flux_units.bases)>3:
+        raise Exception(f"The units of the flux units have more than 3 bases: {flux_units.bases}. Are you sure this is a flux?")
+    if len(flux_units.bases)<2
+        raise Exception(f"The units of the flux units have less than 2 bases: {flux_units.bases}. Are you sure this is a flux?")
+        
+    bool_energy_power=False
     #obtain the power of the energy
     for iunit,ipow in zip(split_units,flux_units.powers):
         if u.Unit(iunit.split("^")[0]).is_equivalent("erg"):
             energy_power=ipow
-        else:
-            energy_power=0
+            bool_energy_power=True
+            break
+            
+    if not bool_energy_power:
+        energy_power=0
 
     if flux_units.is_equivalent(u.Unit(f"erg{energy_power} cm-2 s-1")):
 
