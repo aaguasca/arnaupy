@@ -451,7 +451,7 @@ def correct_display_flux_units(flux_units):
 
     if len(flux_units.bases)>3:
         raise Exception(f"The units of the flux units have more than 3 bases: {flux_units.bases}. Are you sure this is a flux?")
-    if len(flux_units.bases)<2
+    if len(flux_units.bases)<2:
         raise Exception(f"The units of the flux units have less than 2 bases: {flux_units.bases}. Are you sure this is a flux?")
         
     bool_energy_power=False
