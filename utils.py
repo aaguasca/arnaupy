@@ -184,7 +184,6 @@ class significant_digits:
         #usual rounding
         else:
             val=10**self.n_zero_decimals*round(val/10**(self.n_zero_decimals))
-            print(val,self.n_zero_decimals)
             #when the round is done we loss the last digit if it is a zero
             #check for it            
             if is_val: 
