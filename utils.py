@@ -151,13 +151,12 @@ class significant_digits:
         elif int(round(np.modf(first_two_significant_figures)[0],5)*10)==5:
 
             #when the round is done we loss the last digit if it is a zero
-            #check for it
+            #check for it            
             if is_val: 
-                print(round(val/10**(self.n_zero_decimals))%10)
-                if (round(val/10**(self.n_zero_decimals))%10)==0:
-                    bool_add_zero=True
-                else:
-                    bool_add_zero=False            
+                bool_add_zero=0
+                for i in range(1,abs(self.n_zero_decimals)):
+                    if (round(val/10**(self.n_zero_decimals))%10**(i))==0:
+                        bool_add_zero+=1
             
             # if even the first significant figure, do not round
             if (int(np.modf(first_two_significant_figures)[1])%2)==0:
@@ -177,23 +176,22 @@ class significant_digits:
                 if self.precision == 2:
                     val=str(val)+"0"  
                     
-            #correct the lost 0
+            #correct the lost 0                
             if is_val: 
-                if bool_add_zero:
-                    val=str(val)+"0"
+                val=str(val)+"".join(["0"]*bool_add_zero)
                     
                     
         #usual rounding
         else:
             val=10**self.n_zero_decimals*round(val/10**(self.n_zero_decimals))
-
+            print(val,self.n_zero_decimals)
             #when the round is done we loss the last digit if it is a zero
             #check for it            
             if is_val: 
-                if (round(val/10**(self.n_zero_decimals))%10)==0:
-                    bool_add_zero=True
-                else:
-                    bool_add_zero=False
+                bool_add_zero=0
+                for i in range(1,abs(self.n_zero_decimals)):
+                    if (round(val/10**(self.n_zero_decimals))%10**(i))==0:
+                        bool_add_zero+=1
                 
             # for example, cases where the error value is 1.3 and you 
             # want the value of 200 to be "200.0" to match the error 
@@ -205,8 +203,8 @@ class significant_digits:
                 
             #correct the lost 0                
             if is_val: 
-                if bool_add_zero:
-                    val=str(val)+"0"
+                val=str(val)+"".join(["0"]*bool_add_zero)
+                    
 
         val=str(val)
         
