@@ -107,7 +107,7 @@ class significant_digits:
         val = str(val)
         return val
     
-    def rounding(self, val, first_two_significant_figures):
+    def rounding(self, val, first_two_significant_figures, is_val=False):
         """
         Rounding the value val using the first_two_significant_figures 
         variable, which is the value with the first and second 
@@ -150,6 +150,15 @@ class significant_digits:
         #rounding off with a 5 as a second digit
         elif int(round(np.modf(first_two_significant_figures)[0],5)*10)==5:
 
+            #when the round is done we loss the last digit if it is a zero
+            #check for it
+            if is_val: 
+                print(round(val/10**(self.n_zero_decimals))%10)
+                if (round(val/10**(self.n_zero_decimals))%10)==0:
+                    bool_add_zero=True
+                else:
+                    bool_add_zero=False            
+            
             # if even the first significant figure, do not round
             if (int(np.modf(first_two_significant_figures)[1])%2)==0:
                 #round last significant digit
@@ -168,10 +177,24 @@ class significant_digits:
                 if self.precision == 2:
                     val=str(val)+"0"  
                     
+            #correct the lost 0
+            if is_val: 
+                if bool_add_zero:
+                    val=str(val)+"0"
+                    
+                    
         #usual rounding
         else:
             val=10**self.n_zero_decimals*round(val/10**(self.n_zero_decimals))
 
+            #when the round is done we loss the last digit if it is a zero
+            #check for it            
+            if is_val: 
+                if (round(val/10**(self.n_zero_decimals))%10)==0:
+                    bool_add_zero=True
+                else:
+                    bool_add_zero=False
+                
             # for example, cases where the error value is 1.3 and you 
             # want the value of 200 to be "200.0" to match the error 
             # value digits
@@ -179,8 +202,14 @@ class significant_digits:
                 val=float(np.round(val,10))
             else:
                 val=np.round(val,10)
+                
+            #correct the lost 0                
+            if is_val: 
+                if bool_add_zero:
+                    val=str(val)+"0"
 
         val=str(val)
+        
         return val
             
     def run(self,precision=1):
@@ -233,7 +262,7 @@ class significant_digits:
                 self.value*10**(-self.n_zero_decimals),
                 10
             )
-            self.value = self.rounding(self.value, first_two_significant_value_figures)
+            self.value = self.rounding(self.value, first_two_significant_value_figures, is_val=True)
                             
         else:
             if self.value!=0:
