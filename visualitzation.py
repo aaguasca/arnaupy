@@ -5,8 +5,10 @@ from matplotlib.transforms import Bbox
 import matplotlib
 import string
 import astropy.units as u
+import itertools
 
 __all__=[
+    "avoid_bbox_overlap",
     "add_panel_labels",    
     "add_text_info",
     "manage_number_axes",
@@ -15,6 +17,94 @@ __all__=[
     "update_2cool_rcParams",
     "text_in_figure_borders",
 ]
+
+import itertools
+
+import matplotlib
+import itertools
+
+import matplotlib
+import itertools
+
+def avoid_bbox_overlap(fig,ax,txts=None):
+    """avoid overlap between boxes of different texts"""
+    fig.canvas.draw()
+    max_intersect_area=0.1
+    if txts==None:
+        txts=[]
+        for child in ax.get_children():
+            if isinstance(child,matplotlib.text.Text):
+                if child.get_text()!=ax.get_title():
+                    txts.append(child)        
+
+    # get the inverse of the transformation from data coordinates to pixels
+    transf = ax.transData.inverted()
+    bboxes=[]
+    for txt in txts:
+        bb = txt.get_window_extent(renderer = fig.canvas.renderer)
+        bboxes.append(bb.transformed(transf))
+
+    list_modif=[]
+    combinations_bb=list(itertools.combinations(bboxes, 2))
+    for ii in range(len(combinations_bb)):
+        ibbox=combinations_bb[ii][0]
+        ibbox_width=ibbox.width
+        ibbox_height=ibbox.height
+        ybbox=combinations_bb[ii][1]
+        ypoints_start=ybbox.get_points().copy()
+
+        bbox_intersect=combinations_bb[ii][0].intersection(combinations_bb[ii][0],combinations_bb[ii][1])
+        if bbox_intersect!=None:
+
+            ypoints=combinations_bb[ii][1].get_points()
+
+            iarea_ratio,yarea_ratio=1,1
+            cont_arg2=1
+            cont=0
+            bool_modif=False
+            size_catet=ibbox_height
+            
+            while iarea_ratio>max_intersect_area or yarea_ratio>max_intersect_area:
+                ybbox=combinations_bb[ii][1]
+                bbox_intersect=ibbox.intersection(ibbox,ybbox)
+
+                if bbox_intersect!=None:
+                    width_intersec=bbox_intersect.width
+                    heigh_intersec=bbox_intersect.height
+                else:
+                    width_intersec=0
+                    heigh_intersec=0
+                    
+                area_intersec=width_intersec*heigh_intersec
+                iarea_ratio=(area_intersec/(ibbox_width*ibbox_height))
+                yarea_ratio=(area_intersec/(ybbox.width*ybbox.height))
+                if iarea_ratio>max_intersect_area or yarea_ratio>max_intersect_area:
+                    bool_modif=True
+                    if cont>10:
+                        if cont_arg2==1:
+                            cont_arg2=0
+                            cont=0
+                            size_catet=ibbox_width
+
+                        elif cont_arg2==0:                                    
+                            iarea_ratio,yarea_ratio=0,0
+                            print("------------NOT possible to move --------")
+                                                        
+                    ypoints[0][cont_arg2]+=size_catet*cont/10
+                    ypoints[0+1][cont_arg2]+=size_catet*cont/10
+
+                    combinations_bb[ii][1].set_points(ypoints)
+                    cont+=1          
+                            
+            if bool_modif:
+                list_modif.append([(ypoints_start[0,0],ypoints[0,0]),(ypoints_start[0,1],ypoints[0,1])])
+
+    for t,bbox in zip(txts,bboxes):
+        t.set_position((bbox.x0,bbox.y0))
+    for line in list_modif:
+        plt.plot(line[0],line[1],color="gray")
+
+    return fig,ax
 
 def update_2cool_rcParams(**kwargs):
     """
@@ -262,7 +352,12 @@ def add_panel_labels(fig,label_style="alphabet",loc="lower left", **kwargs):
     
     """
     
-    axs_list = fig.axes
+    axs_list = []
+    axes = fig.axes
+    for ax in axes:
+        #require a better way to select...
+        if type(ax).__name__ == "AxesSubplot":
+            axs_list.append(ax)
     
     if label_style=="alphabet":
         alphabet = list(string.ascii_lowercase)
